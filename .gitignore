@@ -2,3 +2,4 @@
 .vscode
 .env
 web/
+.DS_Store
