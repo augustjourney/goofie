@@ -7,13 +7,13 @@ import (
 )
 
 type Service struct {
-	storage IRepo
+	repo IRepo
 }
 
 // GetOneByEmail finds a user in DB by email and returns a found user and error
 // Errors: ErrInternal, ErrUserNotFound
 func (s *Service) GetOneByEmail(ctx context.Context, email string) (User, error) {
-	return s.storage.GetOneByEmail(ctx, email)
+	return s.repo.GetOneByEmail(ctx, email)
 }
 
 // Create creates a new user in DB and returns created user, already exist bool and error
@@ -36,10 +36,10 @@ func (s *Service) Create(ctx context.Context, user User) (User, bool, error) {
 	}
 
 	// create if user doesn't exist
-	createdUser, err := s.storage.Create(ctx, user)
+	createdUser, err := s.repo.Create(ctx, user)
 	return createdUser, alreadyExists, err
 }
 
-func NewService(storage IRepo) *Service {
-	return &Service{storage: storage}
+func NewService(repo IRepo) *Service {
+	return &Service{repo: repo}
 }

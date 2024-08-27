@@ -71,7 +71,7 @@ func (s *Service) Signup(ctx context.Context, payload SignupDTO) (SignupResult, 
 }
 
 func (s *Service) createJWTToken(ctx context.Context, userID uint) (string, error) {
-	cfg := config.GetConfig()
+	cfg := config.Get()
 	claims := Claims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			ExpiresAt: jwt.NewNumericDate(time.Now().Add(cfg.JwtTokenExp)),

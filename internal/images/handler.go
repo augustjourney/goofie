@@ -3,7 +3,6 @@ package images
 import (
 	"api/pkg/config"
 	"api/pkg/errs"
-	"api/pkg/files"
 	"api/pkg/handler"
 	"api/pkg/tracer"
 	"errors"
@@ -22,7 +21,7 @@ func (h *Handler) Upload(c *fiber.Ctx) error {
 
 	var resp handler.Response
 
-	file, filePath, err := handler.SaveFile(ctx, c, "image")
+	file, err := handler.GetMultipartFormFile(ctx, c, "image")
 	if err != nil {
 		if errors.Is(err, errs.ErrNoMultipartFormData) {
 			return resp.WithError(errs.ErrNoImageForUploading).Do(c)
@@ -30,18 +29,10 @@ func (h *Handler) Upload(c *fiber.Ctx) error {
 		return resp.WithError(err).Do(c)
 	}
 
-	defer files.Remove(ctx, filePath)
+	// TODO: get author id from token
+	var AuthorID int = 19
 
-	var dto UploadImageDTO
-
-	dto.Ext = files.GetExtension(ctx, file.Filename)
-	dto.Name = file.Filename
-	dto.Path = filePath
-	dto.Size = file.Size
-	dto.Mime = file.Header.Get("Content-Type")
-	dto.AuthorID = 19
-
-	err = h.service.Create(ctx, dto)
+	err = h.service.Create(ctx, file, AuthorID)
 	if err != nil {
 		return resp.WithError(err).Do(c)
 	}
@@ -51,7 +42,7 @@ func (h *Handler) Upload(c *fiber.Ctx) error {
 
 func NewHandler(service *Service) *Handler {
 	return &Handler{
-		config:  config.GetConfig(),
+		config:  config.Get(),
 		service: service,
 	}
 }

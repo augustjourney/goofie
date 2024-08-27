@@ -26,7 +26,11 @@ var (
 
 	// images
 
-	ErrNoImageForUploading = errors.New("no image provided for upload")
+	ErrNoImageForUploading      = errors.New("no image provided for upload")
+	ErrWrongQualityValue        = errors.New("wrong quality value")
+	ErrWrongHeightValue         = errors.New("wrong height value")
+	ErrWrongWidthValue          = errors.New("wrong width value")
+	ErrOutputFormatNotSupported = errors.New("output format not supported")
 
 	// handler
 

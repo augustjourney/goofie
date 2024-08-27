@@ -9,19 +9,19 @@ import (
 )
 
 type Config struct {
-	DatabaseDSN          string `mapstructure:"DATABASE_DSN"`
-	JwtTokenExp          time.Duration
-	JwtTokenSecretKey    string `mapstructure:"JWT_TOKEN_SECRET_KEY"`
-	JwtSigningMethod     jwt.SigningMethod
-	TempFolder           string
-	S3Bucket             string
-	S3Provider           string
-	S3Region             string
-	S3Endpoint           string
-	S3BucketForOriginals string
-	S3AccessKeyId        string `mapstructure:"S3_ACCESS_KEY_ID"`
-	S3SecretAccessKey    string `mapstructure:"S3_SECRET_ACCESS_KEY"`
-	CdnURL               string
+	DatabaseDSN           string `mapstructure:"DATABASE_DSN"`
+	JwtTokenExp           time.Duration
+	JwtTokenSecretKey     string `mapstructure:"JWT_TOKEN_SECRET_KEY"`
+	JwtSigningMethod      jwt.SigningMethod
+	TempFolder            string
+	S3Bucket              string
+	S3Provider            string
+	S3Region              string
+	S3Endpoint            string
+	S3AccessKeyId         string `mapstructure:"S3_ACCESS_KEY_ID"`
+	S3SecretAccessKey     string `mapstructure:"S3_SECRET_ACCESS_KEY"`
+	CdnURL                string
+	DefaultImageExtension string
 }
 
 var (
@@ -50,14 +50,14 @@ func LoadConfig(path string) (*Config, error) {
 		config.TempFolder = "temp"
 		config.S3Provider = "selectel"
 		config.S3Bucket = "photos"
-		config.S3BucketForOriginals = "photos"
 		config.S3Region = "ru-1a"
 		config.S3Endpoint = "https://s3.storage.selcloud.ru"
 		config.CdnURL = "https://713726.selcdn.ru"
+		config.DefaultImageExtension = ".webp"
 	})
 	return config, err
 }
 
-func GetConfig() *Config {
+func Get() *Config {
 	return config
 }
