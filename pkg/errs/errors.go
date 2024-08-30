@@ -23,6 +23,8 @@ var (
 	ErrEmptyEmail       = errors.New("email cannot be empty")
 	ErrEmptyFirstName   = errors.New("first name cannot be empty")
 	ErrWrongCredentials = errors.New("wrong login or password")
+	ErrTokenExpired     = errors.New("token expired")
+	ErrInvalidToken     = errors.New("invalid token")
 
 	// images
 

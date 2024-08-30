@@ -15,11 +15,16 @@ type Handler struct {
 	service *Service
 }
 
-// Upload handles http-request for creating and uploading an image
-func (h *Handler) Upload(c *fiber.Ctx) error {
+// Create handles http-request for creating and uploading an image
+func (h *Handler) Create(c *fiber.Ctx) error {
 	ctx := tracer.NewContext(c, "upload")
 
 	var resp handler.Response
+
+	userId, ok := handler.GetUserIDFromFiberContext(c)
+	if !ok {
+		return resp.WithStatus(fiber.StatusUnauthorized).Do(c)
+	}
 
 	file, err := handler.GetMultipartFormFile(ctx, c, "image")
 	if err != nil {
@@ -29,10 +34,7 @@ func (h *Handler) Upload(c *fiber.Ctx) error {
 		return resp.WithError(err).Do(c)
 	}
 
-	// TODO: get author id from token
-	var AuthorID int = 19
-
-	err = h.service.Create(ctx, file, AuthorID)
+	err = h.service.Create(ctx, file, userId)
 	if err != nil {
 		return resp.WithError(err).Do(c)
 	}

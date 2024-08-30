@@ -8,12 +8,11 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"image"
 	"mime/multipart"
 	"strconv"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 type Service struct {
@@ -22,7 +21,7 @@ type Service struct {
 	s3     storage.S3
 }
 
-func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, authorID int) error {
+func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, authorID uint) error {
 	buff, err := openMultipart(ctx, file)
 	if err != nil {
 		return err
@@ -40,7 +39,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 		Size:     file.Size,
 		Name:     file.Filename,
 		Slug:     uuid.New().String(),
-		AuthorID: uint(authorID),
+		AuthorID: authorID,
 	}
 	img.WithDefaults(s.config).WithMetadata(getMetadata(src))
 
@@ -63,9 +62,14 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 		return err
 	}
 
-	// pre-process image
-	// create webp, jpeg, avif
-	var rules []ResizeRule = []ResizeRule{
+	s.ProcessUploadedImage(ctx, src, img)
+
+	return nil
+}
+
+// ProcessUploadedImage converts uploaded image to webp, jpeg, avif and uploads new formats to s3 storage
+func (s *Service) ProcessUploadedImage(ctx context.Context, src *image.Image, img Image) {
+	var rules = []ResizeRule{
 		{
 			Quality: 80,
 			Width:   img.Width,
@@ -92,10 +96,12 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 			if err != nil {
 				return
 			}
+
 			expiryTime := time.Now().Add(time.Minute * 5)
 			expiry := strconv.FormatInt(expiryTime.Unix(), 10)
 			filename := getHashFilename(ctx, img.Slug, r)
-			filepath, err := s.s3.Upload(ctx, bytes.NewReader(resized.Bytes()), img.Bucket, filename, "image/"+rule.Format, expiry)
+
+			_, err = s.s3.Upload(ctx, bytes.NewReader(resized.Bytes()), img.Bucket, filename, "image/"+rule.Format, expiry)
 			if err != nil {
 				logger.Error(logger.Record{
 					Error:   err,
@@ -103,11 +109,8 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 				})
 				return
 			}
-			fmt.Println("Done ", filepath)
 		}(src, rule)
 	}
-
-	return nil
 }
 
 func NewService(repo *Repo) *Service {

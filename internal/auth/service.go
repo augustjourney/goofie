@@ -6,6 +6,7 @@ import (
 	"api/pkg/errs"
 	"api/pkg/logger"
 	"context"
+	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"golang.org/x/crypto/bcrypt"
 	"time"
@@ -93,6 +94,46 @@ func (s *Service) createJWTToken(ctx context.Context, userID uint) (string, erro
 	}
 
 	return tokenString, nil
+}
+
+func validateJWTToken(ctx context.Context, token string) (Claims, error) {
+	claims := Claims{}
+	cfg := config.Get()
+	data, err := jwt.ParseWithClaims(token, &claims,
+		func(t *jwt.Token) (interface{}, error) {
+			return []byte(cfg.JwtTokenSecretKey), nil
+		},
+	)
+
+	if err != nil {
+		if errors.Is(err, jwt.ErrTokenExpired) {
+			return claims, errs.ErrTokenExpired
+		}
+		if errors.Is(err, jwt.ErrTokenMalformed) {
+			return claims, errs.ErrInvalidToken
+		}
+		return claims, err
+	}
+
+	if !data.Valid {
+		return claims, errs.ErrInvalidToken
+	}
+
+	if data.Method.Alg() != cfg.JwtSigningMethod.Alg() {
+		logger.Warn(logger.Record{
+			Message: "JWT Token method mismatch",
+			Context: ctx,
+			Data: map[string]interface{}{
+				"expected_method": cfg.JwtSigningMethod,
+				"got_method":      data.Method,
+				"data":            data,
+				"token":           token,
+			},
+		})
+		return claims, errs.ErrInvalidToken
+	}
+
+	return claims, nil
 }
 
 func (s *Service) hashPassword(ctx context.Context, password string) (string, error) {

@@ -14,6 +14,7 @@ func NewApp(db *gorm.DB) *fiber.App {
 	app := fiber.New()
 
 	app.Use(middleware.RequestLogger)
+	app.Use(auth.ExtractUser)
 
 	_, usersService := users.New(db)
 	authHandler, _ := auth.New(usersService)
@@ -21,7 +22,7 @@ func NewApp(db *gorm.DB) *fiber.App {
 
 	app.Post("/auth/signup", authHandler.Signup)
 	app.Post("/auth/login", authHandler.Login)
-	app.Post("/images", imagesHandler.Upload)
+	app.Post("/images", auth.UserRequired, imagesHandler.Create)
 
 	return app
 }
