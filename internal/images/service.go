@@ -7,7 +7,6 @@ import (
 	"api/pkg/logger"
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"image"
 	"mime/multipart"
@@ -21,15 +20,16 @@ type Service struct {
 	s3     storage.S3
 }
 
-func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, authorID uint) error {
+func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, authorID uint) (CreateResult, error) {
+	var result CreateResult
 	buff, err := openMultipart(ctx, file)
 	if err != nil {
-		return err
+		return result, err
 	}
 
 	src, err := decode(ctx, buff)
 	if err != nil {
-		return err
+		return result, err
 	}
 
 	// build image model
@@ -44,27 +44,33 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 	img.WithDefaults(s.config).WithMetadata(getMetadata(src))
 
 	// upload original image
-	filepath, err := s.s3.Upload(ctx, bytes.NewReader(buff.Bytes()), img.Bucket, img.GetFilename(), img.Mime, "")
+	_, err = s.s3.Upload(ctx, bytes.NewReader(buff.Bytes()), img.Bucket, img.GetFilename(), img.Mime, "")
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,
 			Context: ctx,
 		})
-		return err
+		return result, err
 	}
-	fmt.Println("Done original ", filepath)
 
 	// create image in db
 	err = s.repo.Create(ctx, &img)
 	if err != nil {
 		// TODO: delete image from bucket
 		// Because it was uploaded but not saved info to db
-		return err
+		return result, err
 	}
 
 	s.ProcessUploadedImage(ctx, src, img)
 
-	return nil
+	result.Slug = img.Slug
+	result.Mime = img.Mime
+	result.Ext = img.Ext
+	result.Size = img.Size
+	result.Width = img.Width
+	result.Height = img.Height
+
+	return result, nil
 }
 
 // ProcessUploadedImage converts uploaded image to webp, jpeg, avif and uploads new formats to s3 storage

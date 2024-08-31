@@ -34,12 +34,12 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 		return resp.WithError(err).Do(c)
 	}
 
-	err = h.service.Create(ctx, file, userId)
+	img, err := h.service.Create(ctx, file, userId)
 	if err != nil {
 		return resp.WithError(err).Do(c)
 	}
 
-	return resp.Do(c)
+	return resp.WithData(img).Do(c)
 }
 
 func NewHandler(service *Service) *Handler {

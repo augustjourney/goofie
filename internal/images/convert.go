@@ -4,7 +4,6 @@ import (
 	"api/pkg/logger"
 	"bytes"
 	"context"
-	"fmt"
 	"image"
 	"image/jpeg"
 
@@ -17,8 +16,6 @@ func toAvif(ctx context.Context, src *image.NRGBA, quality int) (*bytes.Buffer, 
 
 	qualityPercent := quality * 100 / 100
 	avifQuality := avif.MaxQuality - (avif.MaxQuality * qualityPercent / 100)
-
-	fmt.Println("quality", quality, "qualityPercent", qualityPercent, "avif", avifQuality)
 
 	err := avif.Encode(buff, src, &avif.Options{
 		Quality: avifQuality,

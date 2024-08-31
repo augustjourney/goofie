@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"api/pkg/logger"
 	"context"
 	"fmt"
 	"io"
@@ -77,7 +78,10 @@ func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket stri
 
 	defer resp.Body.Close()
 
-	fmt.Println("Uploaded file with status", resp.StatusCode)
+	logger.Info(logger.Record{
+		Message: fmt.Sprintf("upload to selectel success, bucket: %s, file: %s, expiry: %s", bucket, fileName, expiry),
+		Context: ctx,
+	})
 
 	return buildFilePath(bucket, fileName), nil
 }
