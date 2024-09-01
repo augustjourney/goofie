@@ -4,10 +4,49 @@ import (
 	"api/pkg/logger"
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/gofiber/fiber/v2"
+	"net/http"
 	"strconv"
 	"time"
 )
+
+func parseResponseBody(c *fiber.Ctx) interface{} {
+	contentLength, _ := strconv.Atoi(c.Get("Content-Length"))
+
+	if contentLength > 10000 {
+		return "too big response body"
+	}
+
+	contentType := c.Get(fiber.HeaderContentType)
+
+	if contentType == fiber.MIMETextPlain {
+		return string(c.Response().Body())
+	}
+
+	if contentType != fiber.MIMEApplicationJSON {
+		return fmt.Sprintf("unknown content type %s to process response body", contentType)
+	}
+
+	var responseBody interface{}
+
+	err := json.Unmarshal(c.Response().Body(), &responseBody)
+	if err != nil {
+		return "unable to process response body"
+	}
+
+	return responseBody
+}
+
+func parseRequestBody(c *fiber.Ctx) interface{} {
+	if c.Method() != http.MethodPost || c.Method() != http.MethodPut {
+		return nil
+	}
+
+	var requestBody interface{}
+	_ = c.BodyParser(&requestBody)
+	return requestBody
+}
 
 // RequestLogger logs incoming requests
 func RequestLogger(c *fiber.Ctx) error {
@@ -28,34 +67,9 @@ func RequestLogger(c *fiber.Ctx) error {
 	}
 
 	// get request payload
-	var requestBody interface{}
-	err := c.BodyParser(&requestBody)
-	if err != nil {
-		logger.Error(logger.Record{
-			Message: "[middleware: RequestLogger] Could not parse request body",
-			Error:   err,
-			Data:    data,
-		})
-	}
-	data["request_body"] = requestBody
-
-	// get response body
-	contentLength, _ := strconv.Atoi(c.Get("Content-Length"))
-	var responseBody interface{}
-	if contentLength < 10000 {
-		err = json.Unmarshal(c.Response().Body(), &responseBody)
-		if err != nil {
-			logger.Error(logger.Record{
-				Message: "[middleware: RequestLogger] Could not parse response body",
-				Error:   err,
-				Data:    data,
-			})
-		}
-	} else {
-		responseBody = []byte("Too big response body")
-	}
-
-	data["response_body"] = responseBody
+	// get request and response body
+	data["request_body"] = parseRequestBody(c)
+	data["response_body"] = parseResponseBody(c)
 
 	ctx, ok := c.Locals("ctx").(context.Context)
 	if !ok {
