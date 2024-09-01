@@ -1,8 +1,8 @@
 package logger
 
 import (
+	"github.com/dusted-go/logging/prettylog"
 	"log/slog"
-	"os"
 	"runtime"
 )
 
@@ -18,9 +18,12 @@ var logLevels = map[slog.Level]string{
 }
 
 func init() {
-	slogLogger = slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-		Level: slog.LevelDebug,
-	}))
+	prettyHandler := prettylog.NewHandler(&slog.HandlerOptions{
+		Level:       slog.LevelDebug,
+		AddSource:   false,
+		ReplaceAttr: nil,
+	})
+	slogLogger = slog.New(prettyHandler)
 }
 
 func log(rec Record, level slog.Level) {
