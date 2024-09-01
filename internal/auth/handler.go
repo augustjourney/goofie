@@ -6,6 +6,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Handler implements [IHandler] and stores methods for handling auth http-requests.
 type Handler struct {
 	service IService
 }
@@ -68,12 +69,7 @@ func (h *Handler) Login(c *fiber.Ctx) error {
 	return resp.Do(c)
 }
 
-// forget password
-func (h *Handler) ForgetPassword() {}
-
-// confirm password change
-func (h *Handler) ConfirmPasswordChange() {}
-
+// NewHandler creates a new Auth Handler.
 func NewHandler(service IService) *Handler {
 	return &Handler{
 		service,

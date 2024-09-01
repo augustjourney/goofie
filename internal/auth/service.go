@@ -12,15 +12,18 @@ import (
 	"time"
 )
 
+// Service implements [IService] and stores methods for authentication.
 type Service struct {
 	users users.IService
 }
 
+// Claims stores data about authorization JWT-token.
 type Claims struct {
 	jwt.RegisteredClaims
 	UserID uint `json:"user_id"`
 }
 
+// Login finds a user by given email in db, compares passwords and creates JWT-token.
 func (s *Service) Login(ctx context.Context, payload LoginDTO) (LoginResult, error) {
 	var result LoginResult
 
@@ -43,6 +46,7 @@ func (s *Service) Login(ctx context.Context, payload LoginDTO) (LoginResult, err
 	return result, nil
 }
 
+// Signup registrates a new user.
 func (s *Service) Signup(ctx context.Context, payload SignupDTO) (SignupResult, error) {
 	var result SignupResult
 
@@ -88,7 +92,7 @@ func (s *Service) createJWTToken(ctx context.Context, userID uint) (string, erro
 		logger.Error(logger.Record{
 			Error:   err,
 			Context: ctx,
-			Message: "[AuthService.createJWTToken] Failed to create JWT token",
+			Message: "failed to create JWT token",
 		})
 		return "", err
 	}
@@ -142,7 +146,7 @@ func (s *Service) hashPassword(ctx context.Context, password string) (string, er
 		logger.Error(logger.Record{
 			Context: ctx,
 			Error:   err,
-			Message: "[AuthService.HashPassword] Failed to hash password",
+			Message: "failed to hash password",
 		})
 		return "", err
 	}
@@ -154,6 +158,7 @@ func (s *Service) passwordMatches(hash string, password string) bool {
 	return err == nil
 }
 
+// NewService creates a new Auth Service.
 func NewService(users users.IService) *Service {
 	return &Service{
 		users,

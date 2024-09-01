@@ -5,6 +5,7 @@ import (
 	"strings"
 )
 
+// SignupDTO stores data for signing up that came from request body
 type SignupDTO struct {
 	Username  string `json:"username"`
 	Email     string `json:"email"`
@@ -13,6 +14,9 @@ type SignupDTO struct {
 	Password  string `json:"password"`
 }
 
+// Validate checks required fields in [SignupDTO].
+// Also makes email, username to lowercase.
+// And trims space for email, username and password.
 func (d *SignupDTO) Validate() error {
 	if d.Username == "" {
 		return errs.ErrEmptyUsername
@@ -37,15 +41,22 @@ func (d *SignupDTO) Validate() error {
 	return nil
 }
 
+// SignupResult is a result data after signing up.
 type SignupResult struct {
+	// When user tries to sign up, they may already exist.
+	// Returning this bool field we can show on client side a useful message.
 	AlreadyExists bool `json:"already_exists"`
 }
 
+// LoginDTO stores data for login that came from request body
 type LoginDTO struct {
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }
 
+// Validate checks required fields in [LoginDTO].
+// Also makes email to lowercase.
+// And trims space of email and password.
 func (d *LoginDTO) Validate() error {
 	if d.Email == "" {
 		return errs.ErrEmptyEmail
@@ -58,6 +69,7 @@ func (d *LoginDTO) Validate() error {
 	return nil
 }
 
+// LoginResult is a result data after login.
 type LoginResult struct {
 	Token string `json:"token"`
 }
