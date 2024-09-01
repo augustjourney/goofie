@@ -14,12 +14,14 @@ import (
 	"time"
 )
 
+// Service stores methods of images actions.
 type Service struct {
 	config *config.Config
 	repo   *Repo
 	s3     storage.S3
 }
 
+// Create creates a new image in the database and uploads it to s3 storage
 func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, authorID uint) (CreateResult, error) {
 	var result CreateResult
 	buff, err := openMultipart(ctx, file)
@@ -119,6 +121,7 @@ func (s *Service) ProcessUploadedImage(ctx context.Context, src *image.Image, im
 	}
 }
 
+// NewService creates and returns a new images [Service] instance.
 func NewService(repo *Repo) *Service {
 	cfg := config.Get()
 	s3 := storage.New(cfg.S3Provider, storage.Config{

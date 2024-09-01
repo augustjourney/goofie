@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// NewApp creates a new fiber app, setting all the necessary middlewares and routes.
 func NewApp(db *gorm.DB) *fiber.App {
 	app := fiber.New()
 
@@ -18,7 +19,7 @@ func NewApp(db *gorm.DB) *fiber.App {
 
 	_, usersService := users.New(db)
 	authHandler, _ := auth.New(usersService)
-	imagesHandler := images.NewHandler(images.NewService(images.NewRepo(db)))
+	imagesHandler, _ := images.New(db)
 
 	app.Post("/auth/signup", authHandler.Signup)
 	app.Post("/auth/login", authHandler.Login)

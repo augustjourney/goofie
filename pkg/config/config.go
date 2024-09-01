@@ -8,6 +8,7 @@ import (
 	"github.com/spf13/viper"
 )
 
+// Config stores all the necessary app configuration
 type Config struct {
 	DatabaseDSN           string `mapstructure:"DATABASE_DSN"`
 	JwtTokenExp           time.Duration
@@ -29,6 +30,7 @@ var (
 	once   sync.Once
 )
 
+// LoadConfig reads .env file and constructs [Config]
 func LoadConfig(path string) (*Config, error) {
 	var err error
 	once.Do(func() {
@@ -58,6 +60,7 @@ func LoadConfig(path string) (*Config, error) {
 	return config, err
 }
 
+// Get returns [Config] instance
 func Get() *Config {
 	return config
 }

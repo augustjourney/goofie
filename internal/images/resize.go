@@ -15,10 +15,13 @@ import (
 )
 
 const (
+	// MinQuality is the smallest number of [ResizeRule.Quality]
 	MinQuality = 0
+	// MaxQuality is the largest number of [ResizeRule.Quality]
 	MaxQuality = 100
 )
 
+// ResizeRule stores data how image should be resized and converted.
 type ResizeRule struct {
 	Quality int    `json:"quality"`
 	Width   int    `json:"width"`
@@ -26,6 +29,7 @@ type ResizeRule struct {
 	Format  string `json:"format"`
 }
 
+// Validate checks values of Quality, Height and Width.
 func (r *ResizeRule) Validate() error {
 	if r.Quality < MinQuality || r.Quality > MaxQuality {
 		return errs.ErrWrongQualityValue
@@ -84,6 +88,7 @@ func resize(ctx context.Context, src *image.Image, rule ResizeRule) (*bytes.Buff
 
 }
 
+// Metadata stores data about uploaded image
 type Metadata struct {
 	Width  int
 	Height int
@@ -146,6 +151,8 @@ func openMultipart(ctx context.Context, file *multipart.FileHeader) (*bytes.Buff
 	return bytes.NewBuffer(flRead), nil
 }
 
+// TODO
 func exportAsBase64(ctx context.Context) {}
 
+// TODO
 func saveToFile(ctx context.Context) {}

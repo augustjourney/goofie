@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// InitPostgres creates a new connection to postgres using gorm
 func InitPostgres(ctx context.Context, dsn string) (*gorm.DB, error) {
 	pg, err := sqlx.Open("pgx", dsn)
 	if err != nil {

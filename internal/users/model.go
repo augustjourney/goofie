@@ -7,6 +7,7 @@ import (
 	"time"
 )
 
+// User stores data about user and represents table «users» in db
 type User struct {
 	gorm.Model
 	Email            string  `gorm:"type:varchar(255);unique;not null;index;" json:"email"`

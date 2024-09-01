@@ -12,14 +12,12 @@ const (
 	spanNameKey  = "span_name"
 )
 
+// WithTraceID generates a new trace id and puts it to context value returning updated context.
 func WithTraceID(ctx context.Context) context.Context {
-	traceID, err := uuid.NewRandom()
-	if err != nil {
-		return context.WithValue(ctx, traceIDKey, "")
-	}
-	return context.WithValue(ctx, traceIDKey, traceID.String())
+	return context.WithValue(ctx, traceIDKey, uuid.NewString())
 }
 
+// GetTraceID extracts and returns trace id from context values.
 func GetTraceID(ctx context.Context) string {
 	traceID, ok := ctx.Value(traceIDKey).(string)
 	if !ok {
@@ -28,12 +26,13 @@ func GetTraceID(ctx context.Context) string {
 	return traceID
 }
 
+// WithSessionID gets session id from fiber context request headers
+// and puts session id to context values returning updated context.
 func WithSessionID(ctx context.Context, fiberCtx *fiber.Ctx) context.Context {
-	// gets session id from request headers
-	sessionID := fiberCtx.Get("session_id")
-	return context.WithValue(ctx, sessionIDKey, sessionID)
+	return context.WithValue(ctx, sessionIDKey, fiberCtx.Get("session_id"))
 }
 
+// GetSessionID extracts and returns session id from context values.
 func GetSessionID(ctx context.Context) string {
 	sessionID, ok := ctx.Value(sessionIDKey).(string)
 	if !ok {
@@ -42,10 +41,12 @@ func GetSessionID(ctx context.Context) string {
 	return sessionID
 }
 
+// WithSpanName puts the given span name to context values returning updated context.
 func WithSpanName(ctx context.Context, spanName string) context.Context {
 	return context.WithValue(ctx, spanNameKey, spanName)
 }
 
+// GetSpanName extracts and returns span name from context values.
 func GetSpanName(ctx context.Context) string {
 	spanName, ok := ctx.Value(spanNameKey).(string)
 	if !ok {

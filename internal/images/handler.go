@@ -10,6 +10,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Handler stores methods for handling images http-requests.
 type Handler struct {
 	config  *config.Config
 	service *Service
@@ -42,6 +43,7 @@ func (h *Handler) Create(c *fiber.Ctx) error {
 	return resp.WithData(img).Do(c)
 }
 
+// NewHandler creates and returns a new images [Handler] instance.
 func NewHandler(service *Service) *Handler {
 	return &Handler{
 		config:  config.Get(),

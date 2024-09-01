@@ -6,6 +6,7 @@ import (
 	"errors"
 )
 
+// Service stores methods of users actions.
 type Service struct {
 	repo IRepo
 }
@@ -40,6 +41,7 @@ func (s *Service) Create(ctx context.Context, user User) (User, bool, error) {
 	return createdUser, alreadyExists, err
 }
 
+// NewService creates and returns a new users [Service] instance.
 func NewService(repo IRepo) *Service {
 	return &Service{repo: repo}
 }

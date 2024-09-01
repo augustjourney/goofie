@@ -9,18 +9,22 @@ import (
 	"time"
 )
 
+// Selectel implements [S3] interface to interact with s3 selectel storage.
 type Selectel struct {
 	lastAuthTime time.Time
 	authToken    string
 	cfg          Config
 }
 
+// NewSelectel creates and returns a new [Selectel] instance.
 func NewSelectel(cfg Config) *Selectel {
 	return &Selectel{
 		cfg: cfg,
 	}
 }
 
+// Auth sends a request to selectel to get auth token for further upload requests.
+// Auth token lives only 24 hours.
 func (s *Selectel) Auth() error {
 	// token lives 24 hours
 	if time.Since(s.lastAuthTime).Hours() < 23 && s.authToken != "" {
@@ -49,6 +53,7 @@ func (s *Selectel) Auth() error {
 	return nil
 }
 
+// Upload uploads a file to selectel s3 storage.
 func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error) {
 	err := s.Auth()
 	if err != nil {

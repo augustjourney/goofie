@@ -12,6 +12,7 @@ import (
 )
 
 func main() {
+	// load config
 	ctx := context.Background()
 	cfg, err := config.LoadConfig(".")
 	if err != nil {
@@ -22,11 +23,14 @@ func main() {
 		})
 		return
 	}
+
+	// connect to postgres
 	db, err := storage.InitPostgres(ctx, cfg.DatabaseDSN)
 	if err != nil {
 		panic(err)
 	}
 
+	// do migrations
 	err = db.AutoMigrate(&users.User{}, &images.Image{}, &bookmarks.Bookmark{})
 	if err != nil {
 		logger.Error(logger.Record{
@@ -36,6 +40,7 @@ func main() {
 		})
 	}
 
+	// set up app for listening
 	a := app.NewApp(db)
 
 	logger.Info(logger.Record{

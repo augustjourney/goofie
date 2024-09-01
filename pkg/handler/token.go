@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+// ExtractBearerToken extracts token from bearer authorization.
+// Returns empty string if authorization header is empty or invalid.
 func ExtractBearerToken(c *fiber.Ctx) string {
 	authHeader := c.Get(fiber.HeaderAuthorization)
 	if authHeader == "" {

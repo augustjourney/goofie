@@ -56,18 +56,22 @@ func log(rec Record, level slog.Level) {
 	slogLogger.Log(rec.Context, level, rec.Message, args...)
 }
 
+// Info logs at Info level
 func Info(rec Record) {
 	log(rec, slog.LevelInfo)
 }
 
+// Error logs at Error level
 func Error(rec Record) {
 	log(rec, slog.LevelError)
 }
 
+// Debug logs at Debug level
 func Debug(rec Record) {
 	log(rec, slog.LevelDebug)
 }
 
+// Warn logs at Warn level
 func Warn(rec Record) {
 	log(rec, slog.LevelWarn)
 }

@@ -5,6 +5,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+// Response is a structure for response of all json http-requests body.
+// StatusCode and Error not used in http response body.
 type Response struct {
 	OK         bool        `json:"ok"`
 	Result     interface{} `json:"result"`
@@ -13,6 +15,7 @@ type Response struct {
 	Error      error       `json:"-"`
 }
 
+// WithError sets error and status code to response.
 func (r *Response) WithError(err error) *Response {
 	r.Error = err
 
@@ -35,21 +38,27 @@ func (r *Response) WithError(err error) *Response {
 	return r
 }
 
+// WithStatus sets status code to response.
 func (r *Response) WithStatus(status int) *Response {
 	r.StatusCode = status
 	return r
 }
 
+// WithData sets data to response result.
 func (r *Response) WithData(data interface{}) *Response {
 	r.Result = data
 	return r
 }
 
+// WithMessage sets message to response.
 func (r *Response) WithMessage(message string) *Response {
 	r.Message = message
 	return r
 }
 
+// Do does actual fiber response.
+// If status code was not set, http.StatusOK will be used.
+// If message was not set and error is not empty, error.Error() will be used as message.
 func (r *Response) Do(fiberCtx *fiber.Ctx) error {
 	if r.StatusCode == 0 {
 		r.StatusCode = fiber.StatusOK

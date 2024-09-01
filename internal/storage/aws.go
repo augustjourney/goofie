@@ -11,11 +11,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 )
 
+// AWS implements [S3] interface to interact with s3 aws storage.
 type AWS struct {
 	cfg    Config
 	client *s3.S3
 }
 
+// NewAWS creates and returns a new [AWS] instance.
 func NewAWS(cfg Config) *AWS {
 	sess, _ := session.NewSession(&aws.Config{
 		Region:           aws.String(cfg.Region),
@@ -34,6 +36,7 @@ func NewAWS(cfg Config) *AWS {
 	}
 }
 
+// Upload uploads a file to aws s3 storage.
 func (s *AWS) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error) {
 
 	_, err := s.client.PutObject(&s3.PutObjectInput{
