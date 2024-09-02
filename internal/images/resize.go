@@ -1,6 +1,7 @@
 package images
 
 import (
+	"api/pkg/consts"
 	"api/pkg/errs"
 	"api/pkg/logger"
 	"bytes"
@@ -10,6 +11,7 @@ import (
 	"github.com/h2non/bimg"
 	"io"
 	"mime/multipart"
+	"time"
 )
 
 const (
@@ -66,6 +68,7 @@ func getHashFilename(ctx context.Context, slug string, rule ResizeRule) string {
 }
 
 func resize(ctx context.Context, src []byte, rule ResizeRule) ([]byte, error) {
+	startResizingAt := time.Now()
 	options := bimg.Options{
 		Width:   rule.Width,
 		Height:  rule.Height,
@@ -84,12 +87,20 @@ func resize(ctx context.Context, src []byte, rule ResizeRule) ([]byte, error) {
 	}
 
 	result, err := bimg.NewImage(src).Process(options)
+	resizeProcessingTime := time.Since(startResizingAt).Milliseconds()
+	ctx = context.WithValue(ctx, consts.ResizeProcessingTimeKey, resizeProcessingTime)
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,
 			Context: ctx,
 		})
+		return nil, err
 	}
+
+	logger.Info(logger.Record{
+		Message: fmt.Sprintf("resize image success, format: %s, quality: %d, width: %d, height: %d", rule.Format, rule.Quality, rule.Width, rule.Height),
+		Context: ctx,
+	})
 
 	return result, err
 

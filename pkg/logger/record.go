@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"api/pkg/consts"
 	"api/pkg/tracer"
 	"context"
 	"errors"
@@ -48,5 +49,15 @@ func (rec *Record) addValuesFromContext() {
 	spanName := tracer.GetSpanName(rec.Context)
 	if spanName != "" {
 		rec.Data["span_name"] = spanName
+	}
+
+	resizeProcessingTime := rec.Context.Value(consts.ResizeProcessingTimeKey)
+	if resizeProcessingTime != nil {
+		rec.Data[consts.ResizeProcessingTimeKey] = resizeProcessingTime
+	}
+
+	uploadProcessingTime := rec.Context.Value(consts.UploadProcessingTimeKey)
+	if uploadProcessingTime != nil {
+		rec.Data[consts.UploadProcessingTimeKey] = uploadProcessingTime
 	}
 }

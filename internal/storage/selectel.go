@@ -1,6 +1,7 @@
 package storage
 
 import (
+	"api/pkg/consts"
 	"api/pkg/logger"
 	"context"
 	"fmt"
@@ -55,6 +56,8 @@ func (s *Selectel) Auth() error {
 
 // Upload uploads a file to selectel s3 storage.
 func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error) {
+	startUploadingAt := time.Now()
+
 	err := s.Auth()
 	if err != nil {
 		return "", err
@@ -82,6 +85,9 @@ func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket stri
 	}
 
 	defer resp.Body.Close()
+
+	uploadProcessingTime := time.Since(startUploadingAt).Milliseconds()
+	ctx = context.WithValue(ctx, consts.UploadProcessingTimeKey, uploadProcessingTime)
 
 	logger.Info(logger.Record{
 		Message: fmt.Sprintf("upload to selectel success, bucket: %s, file: %s, expiry: %s", bucket, fileName, expiry),

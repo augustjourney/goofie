@@ -3,11 +3,9 @@ package images
 import (
 	"api/internal/storage"
 	"api/pkg/config"
-	"api/pkg/files"
 	"api/pkg/logger"
 	"bytes"
 	"context"
-	"github.com/google/uuid"
 	"mime/multipart"
 	"strconv"
 	"time"
@@ -31,15 +29,8 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 	src := buff.Bytes()
 
 	// build image model
-	img := Image{
-		Ext:      files.GetExtension(ctx, file.Filename),
-		Mime:     file.Header.Get("Content-Type"),
-		Size:     file.Size,
-		Name:     file.Filename,
-		Slug:     uuid.New().String(),
-		AuthorID: authorID,
-	}
-	img.WithDefaults(s.config).WithMetadata(getMetadata(src))
+	img := Image{}
+	img.FromFileHeader(ctx, file).WithAuthor(authorID).WithDefaults(s.config).WithMetadata(getMetadata(src))
 
 	// upload original image
 	_, err = s.s3.Upload(ctx, bytes.NewReader(src), img.Bucket, img.GetFilename(), img.Mime, "")
@@ -61,12 +52,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 
 	s.ProcessUploadedImage(ctx, src, img)
 
-	result.Slug = img.Slug
-	result.Mime = img.Mime
-	result.Ext = img.Ext
-	result.Size = img.Size
-	result.Width = img.Width
-	result.Height = img.Height
+	result.FromModel(img)
 
 	return result, nil
 }
