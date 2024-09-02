@@ -8,7 +8,6 @@ import (
 	"bytes"
 	"context"
 	"github.com/google/uuid"
-	"image"
 	"mime/multipart"
 	"strconv"
 	"time"
@@ -29,10 +28,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 		return result, err
 	}
 
-	src, err := decode(ctx, buff)
-	if err != nil {
-		return result, err
-	}
+	src := buff.Bytes()
 
 	// build image model
 	img := Image{
@@ -46,7 +42,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 	img.WithDefaults(s.config).WithMetadata(getMetadata(src))
 
 	// upload original image
-	_, err = s.s3.Upload(ctx, bytes.NewReader(buff.Bytes()), img.Bucket, img.GetFilename(), img.Mime, "")
+	_, err = s.s3.Upload(ctx, bytes.NewReader(src), img.Bucket, img.GetFilename(), img.Mime, "")
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,
@@ -76,7 +72,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 }
 
 // ProcessUploadedImage converts uploaded image to webp, jpeg, avif and uploads new formats to s3 storage
-func (s *Service) ProcessUploadedImage(ctx context.Context, src *image.Image, img Image) {
+func (s *Service) ProcessUploadedImage(ctx context.Context, src []byte, img Image) {
 	var rules = []ResizeRule{
 		{
 			Quality: 80,
@@ -99,7 +95,7 @@ func (s *Service) ProcessUploadedImage(ctx context.Context, src *image.Image, im
 	}
 
 	for _, rule := range rules {
-		go func(src *image.Image, r ResizeRule) {
+		go func(src []byte, r ResizeRule) {
 			resized, err := resize(ctx, src, rule)
 			if err != nil {
 				return
@@ -109,7 +105,7 @@ func (s *Service) ProcessUploadedImage(ctx context.Context, src *image.Image, im
 			expiry := strconv.FormatInt(expiryTime.Unix(), 10)
 			filename := getHashFilename(ctx, img.Slug, r)
 
-			_, err = s.s3.Upload(ctx, bytes.NewReader(resized.Bytes()), img.Bucket, filename, "image/"+rule.Format, expiry)
+			_, err = s.s3.Upload(ctx, bytes.NewReader(resized), img.Bucket, filename, "image/"+rule.Format, expiry)
 			if err != nil {
 				logger.Error(logger.Record{
 					Error:   err,

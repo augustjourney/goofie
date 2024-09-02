@@ -7,11 +7,9 @@ import (
 	"context"
 	"crypto/md5"
 	"fmt"
-	"image"
+	"github.com/h2non/bimg"
 	"io"
 	"mime/multipart"
-
-	"github.com/disintegration/imaging"
 )
 
 const (
@@ -67,24 +65,33 @@ func getHashFilename(ctx context.Context, slug string, rule ResizeRule) string {
 	return fmt.Sprintf("%x", hash.Sum(nil)) + "." + rule.Format
 }
 
-func resize(ctx context.Context, src *image.Image, rule ResizeRule) (*bytes.Buffer, error) {
-	resizedImage := imaging.Resize(*src, rule.Width, rule.Height, imaging.Lanczos)
-
-	var buff *bytes.Buffer
-	var err error
+func resize(ctx context.Context, src []byte, rule ResizeRule) ([]byte, error) {
+	options := bimg.Options{
+		Width:   rule.Width,
+		Height:  rule.Height,
+		Quality: rule.Quality,
+	}
 
 	switch rule.Format {
 	case "jpeg":
-		buff, err = toJpeg(ctx, resizedImage, rule.Quality)
+		options.Type = bimg.JPEG
 	case "webp":
-		buff, err = toWebp(ctx, resizedImage, rule.Quality)
+		options.Type = bimg.WEBP
 	case "avif":
-		buff, err = toAvif(ctx, resizedImage, rule.Quality)
+		options.Type = bimg.AVIF
 	default:
 		return nil, errs.ErrOutputFormatNotSupported
 	}
 
-	return buff, err
+	result, err := bimg.NewImage(src).Process(options)
+	if err != nil {
+		logger.Error(logger.Record{
+			Error:   err,
+			Context: ctx,
+		})
+	}
+
+	return result, err
 
 }
 
@@ -94,31 +101,22 @@ type Metadata struct {
 	Height int
 }
 
-func getMetadata(src *image.Image) Metadata {
+func getMetadata(src []byte) Metadata {
 	var metadata Metadata
 
-	dimensions := (*src).Bounds().Size()
-
-	metadata.Height = dimensions.Y
-	metadata.Width = dimensions.X
-
-	return metadata
-}
-
-func decode(ctx context.Context, file *bytes.Buffer) (*image.Image, error) {
-	src, err := imaging.Decode(bytes.NewReader(file.Bytes()))
+	result, err := bimg.NewImage(src).Size()
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,
-			Context: ctx,
-			Message: "failed to decode image",
-			Data: map[string]interface{}{
-				"file": file,
-			},
+			Message: "failed to get metadata",
 		})
-		return nil, err
+		return metadata
 	}
-	return &src, nil
+
+	metadata.Width = result.Width
+	metadata.Height = result.Height
+
+	return metadata
 }
 
 func openMultipart(ctx context.Context, file *multipart.FileHeader) (*bytes.Buffer, error) {
