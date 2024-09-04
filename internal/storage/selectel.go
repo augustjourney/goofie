@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -55,7 +56,7 @@ func (s *Selectel) Auth() error {
 }
 
 // Upload uploads a file to selectel s3 storage.
-func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error) {
+func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiryTime *time.Duration) (string, error) {
 	startUploadingAt := time.Now()
 
 	err := s.Auth()
@@ -74,6 +75,8 @@ func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket stri
 
 	req.Header.Set("X-Auth-Token", s.authToken)
 	req.Header.Set("Content-Type", mime)
+
+	expiry := s.buildExpiryString(expiryTime)
 
 	if expiry != "" {
 		req.Header.Set("X-Delete-At", expiry)
@@ -95,4 +98,12 @@ func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket stri
 	})
 
 	return buildFilePath(bucket, fileName), nil
+}
+
+func (s *Selectel) buildExpiryString(expiryTime *time.Duration) string {
+	if expiryTime == nil {
+		return ""
+	}
+	expiry := time.Now().Add(*expiryTime)
+	return strconv.FormatInt(expiry.Unix(), 10)
 }

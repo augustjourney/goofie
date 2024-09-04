@@ -23,10 +23,11 @@ const (
 
 // ResizeRule stores data how image should be resized and converted.
 type ResizeRule struct {
-	Quality int    `json:"quality"`
-	Width   int    `json:"width"`
-	Height  int    `json:"height"`
-	Format  string `json:"format"`
+	Quality    int            `json:"quality"`
+	Width      int            `json:"width"`
+	Height     int            `json:"height"`
+	Format     string         `json:"format"`
+	ExpiryTime *time.Duration `json:"expiry_time"`
 }
 
 // Validate checks values of Quality, Height and Width.
@@ -87,8 +88,10 @@ func resize(ctx context.Context, src []byte, rule ResizeRule) ([]byte, error) {
 	}
 
 	result, err := bimg.NewImage(src).Process(options)
+
 	resizeProcessingTime := time.Since(startResizingAt).Milliseconds()
 	ctx = context.WithValue(ctx, consts.ResizeProcessingTimeKey, resizeProcessingTime)
+
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,

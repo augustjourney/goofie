@@ -4,6 +4,7 @@ import (
 	"api/pkg/logger"
 	"context"
 	"io"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -37,13 +38,21 @@ func NewAWS(cfg Config) *AWS {
 }
 
 // Upload uploads a file to aws s3 storage.
-func (s *AWS) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error) {
+func (s *AWS) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiryTime *time.Duration) (string, error) {
 
-	_, err := s.client.PutObject(&s3.PutObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(fileName),
-		Body:   buffer,
-	})
+	options := s3.PutObjectInput{
+		Bucket:      aws.String(bucket),
+		Key:         aws.String(fileName),
+		Body:        buffer,
+		ContentType: aws.String(mime),
+	}
+
+	if expiryTime != nil {
+		expiry := time.Now().Add(*expiryTime)
+		options.Expires = &expiry
+	}
+
+	_, err := s.client.PutObject(&options)
 
 	if err == nil {
 		return buildFilePath(bucket, fileName), nil

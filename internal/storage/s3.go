@@ -3,6 +3,7 @@ package storage
 import (
 	"context"
 	"io"
+	"time"
 )
 
 // Config stores data about connection to s3 storage.
@@ -15,7 +16,7 @@ type Config struct {
 
 // S3 is the interface to the s3 storage interactions.
 type S3 interface {
-	Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiry string) (string, error)
+	Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, fileName string, mime string, expiryTime *time.Duration) (string, error)
 }
 
 // New creates and returns a new [S3] instance.

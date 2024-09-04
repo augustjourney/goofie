@@ -7,8 +7,6 @@ import (
 	"bytes"
 	"context"
 	"mime/multipart"
-	"strconv"
-	"time"
 )
 
 // Service stores methods of images actions.
@@ -81,26 +79,35 @@ func (s *Service) ProcessUploadedImage(ctx context.Context, src []byte, img Imag
 	}
 
 	for _, rule := range rules {
-		go func(src []byte, r ResizeRule) {
-			resized, err := resize(ctx, src, rule)
-			if err != nil {
-				return
-			}
-
-			expiryTime := time.Now().Add(time.Minute * 5)
-			expiry := strconv.FormatInt(expiryTime.Unix(), 10)
-			filename := getHashFilename(ctx, img.Slug, r)
-
-			_, err = s.s3.Upload(ctx, bytes.NewReader(resized), img.Bucket, filename, "image/"+rule.Format, expiry)
-			if err != nil {
-				logger.Error(logger.Record{
-					Error:   err,
-					Context: ctx,
-				})
-				return
-			}
-		}(src, rule)
+		go s.Resize(ctx, img, src, rule)
 	}
+}
+
+func (s *Service) Resize(ctx context.Context, img Image, src []byte, rule ResizeRule) error {
+	resized, err := resize(ctx, src, rule)
+	if err != nil {
+		return err
+	}
+
+	filename := getHashFilename(ctx, img.Slug, rule)
+	mime := "image/" + rule.Format
+
+	_, err = s.s3.Upload(ctx, bytes.NewReader(resized), img.Bucket, filename, mime, rule.ExpiryTime)
+	if err != nil {
+		logger.Error(logger.Record{
+			Data: map[string]interface{}{
+				"filename": filename,
+				"image":    img,
+				"rule":     rule,
+			},
+			Message: "failed to upload image",
+			Error:   err,
+			Context: ctx,
+		})
+		return err
+	}
+
+	return nil
 }
 
 // NewService creates and returns a new images [Service] instance.
