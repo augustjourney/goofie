@@ -12,15 +12,12 @@ import (
 func GetMultipartFormFile(ctx context.Context, c *fiber.Ctx, fileKey string) (*multipart.FileHeader, error) {
 	form, err := c.MultipartForm()
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "could not get multipart file",
-			Data: map[string]interface{}{
-				"fileKey": fileKey,
-			},
-		})
+		logger.Error(ctx, "could not get multipart file", err, "fileKey", fileKey)
 		return nil, err
+	}
+
+	if len(form.File[fileKey]) == 0 {
+		return nil, errs.ErrNoMultipartFormData
 	}
 
 	file := form.File[fileKey][0]

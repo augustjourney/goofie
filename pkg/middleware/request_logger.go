@@ -77,12 +77,13 @@ func RequestLogger(c *fiber.Ctx) error {
 	}
 
 	// log request data
-	logger.Info(logger.Record{
+	logData := logger.Record{
 		Message: c.Path(),
 		Data:    data,
 		Type:    "REQUEST",
 		Context: ctx,
-	})
+	}
+	logData.Log()
 
 	return result
 }

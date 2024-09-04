@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"context"
 	"github.com/dusted-go/logging/prettylog"
 	"log/slog"
 	"runtime"
@@ -10,24 +11,17 @@ var (
 	slogLogger *slog.Logger
 )
 
-var logLevels = map[slog.Level]string{
-	slog.LevelDebug: "DEBUG",
-	slog.LevelInfo:  "INFO",
-	slog.LevelWarn:  "WARN",
-	slog.LevelError: "ERROR",
-}
-
 func init() {
 	prettyHandler := prettylog.NewHandler(&slog.HandlerOptions{
 		Level:       slog.LevelDebug,
 		AddSource:   false,
-		ReplaceAttr: nil,
+		ReplaceAttr: replaceAttr,
 	})
 	slogLogger = slog.New(prettyHandler)
 }
 
 func log(rec Record, level slog.Level) {
-	rec.Type = logLevels[level]
+	rec.Type = LogLevels[level]
 
 	if rec.Where == "" {
 		pc, _, _, ok := runtime.Caller(2)
@@ -57,21 +51,38 @@ func log(rec Record, level slog.Level) {
 }
 
 // Info logs at Info level
-func Info(rec Record) {
-	log(rec, slog.LevelInfo)
+func Info(ctx context.Context, message string, args ...interface{}) {
+	log(Record{
+		Context: ctx,
+		Message: message,
+		Data:    collectArgs(args...),
+	}, slog.LevelInfo)
 }
 
 // Error logs at Error level
-func Error(rec Record) {
-	log(rec, slog.LevelError)
+func Error(ctx context.Context, message string, err error, args ...interface{}) {
+	log(Record{
+		Context: ctx,
+		Message: message,
+		Error:   err,
+		Data:    collectArgs(args...),
+	}, slog.LevelError)
 }
 
 // Debug logs at Debug level
-func Debug(rec Record) {
-	log(rec, slog.LevelDebug)
+func Debug(ctx context.Context, message string, args ...interface{}) {
+	log(Record{
+		Context: ctx,
+		Message: message,
+		Data:    collectArgs(args...),
+	}, slog.LevelDebug)
 }
 
 // Warn logs at Warn level
-func Warn(rec Record) {
-	log(rec, slog.LevelWarn)
+func Warn(ctx context.Context, message string, args ...interface{}) {
+	log(Record{
+		Context: ctx,
+		Message: message,
+		Data:    collectArgs(args...),
+	}, slog.LevelWarn)
 }

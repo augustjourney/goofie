@@ -89,11 +89,7 @@ func (s *Service) createJWTToken(ctx context.Context, userID uint) (string, erro
 	tokenString, err := token.SignedString([]byte(cfg.JwtTokenSecretKey))
 
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "failed to create JWT token",
-		})
+		logger.Error(ctx, "failed to create JWT token", err)
 		return "", err
 	}
 
@@ -124,30 +120,16 @@ func validateJWTToken(ctx context.Context, token string) (Claims, error) {
 	}
 
 	if data.Method.Alg() != cfg.JwtSigningMethod.Alg() {
-		logger.Warn(logger.Record{
-			Message: "JWT Token method mismatch",
-			Context: ctx,
-			Data: map[string]interface{}{
-				"expected_method": cfg.JwtSigningMethod,
-				"got_method":      data.Method,
-				"data":            data,
-				"token":           token,
-			},
-		})
+		logger.Warn(ctx, "JWT Token method mismatch", "expected_method", cfg.JwtSigningMethod, "got_method", data.Method, "data", data, "token", token)
 		return claims, errs.ErrInvalidToken
 	}
-
 	return claims, nil
 }
 
 func (s *Service) hashPassword(ctx context.Context, password string) (string, error) {
 	hashed, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		logger.Error(logger.Record{
-			Context: ctx,
-			Error:   err,
-			Message: "failed to hash password",
-		})
+		logger.Error(ctx, "failed to hash password", err)
 		return "", err
 	}
 	return string(hashed), nil

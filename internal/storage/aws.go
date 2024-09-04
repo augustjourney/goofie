@@ -58,15 +58,7 @@ func (s *AWS) Upload(ctx context.Context, buffer io.ReadSeeker, bucket string, f
 		return buildFilePath(bucket, fileName), nil
 	}
 
-	logger.Error(logger.Record{
-		Message: "could not upload file to s3",
-		Error:   err,
-		Context: ctx,
-		Data: map[string]interface{}{
-			"Bucket":   bucket,
-			"filename": fileName,
-		},
-	})
+	logger.Error(ctx, "could not upload file to s3", err, "bucket", bucket, "filename", fileName)
 
 	return "", err
 }

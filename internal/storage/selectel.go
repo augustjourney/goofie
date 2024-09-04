@@ -2,6 +2,7 @@ package storage
 
 import (
 	"api/pkg/consts"
+	"api/pkg/errs"
 	"api/pkg/logger"
 	"context"
 	"fmt"
@@ -89,13 +90,18 @@ func (s *Selectel) Upload(ctx context.Context, buffer io.ReadSeeker, bucket stri
 
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusCreated {
+		logger.Error(ctx, "unable to upload image", errs.ErrUnableToUploadImage, "status_code", resp.StatusCode)
+		return "", errs.ErrUnableToUploadImage
+	}
+
 	uploadProcessingTime := time.Since(startUploadingAt).Milliseconds()
 	ctx = context.WithValue(ctx, consts.UploadProcessingTimeKey, uploadProcessingTime)
 
-	logger.Info(logger.Record{
-		Message: fmt.Sprintf("upload to selectel success, bucket: %s, file: %s, expiry: %s", bucket, fileName, expiry),
-		Context: ctx,
-	})
+	logger.Info(ctx, fmt.Sprintf(
+		"upload to selectel success, bucket: %s, file: %s, expiry: %s",
+		bucket, fileName, expiry),
+	)
 
 	return buildFilePath(bucket, fileName), nil
 }

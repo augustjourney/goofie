@@ -33,14 +33,7 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 	// upload original image
 	_, err = s.s3.Upload(ctx, bytes.NewReader(src), img.Bucket, img.GetFilename(), img.Mime, nil)
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "failed to upload original image",
-			Data: map[string]interface{}{
-				"image": img,
-			},
-		})
+		logger.Error(ctx, "failed to upload original image", err, "image", img)
 		return result, err
 	}
 
@@ -98,16 +91,7 @@ func (s *Service) Resize(ctx context.Context, img Image, src []byte, rule Resize
 
 	_, err = s.s3.Upload(ctx, bytes.NewReader(resized), img.Bucket, filename, mime, rule.ExpiryTime)
 	if err != nil {
-		logger.Error(logger.Record{
-			Data: map[string]interface{}{
-				"filename": filename,
-				"image":    img,
-				"rule":     rule,
-			},
-			Message: "failed to upload image",
-			Error:   err,
-			Context: ctx,
-		})
+		logger.Error(ctx, "failed to upload image", err, "filename", filename, "image", img, "rule", rule)
 		return err
 	}
 

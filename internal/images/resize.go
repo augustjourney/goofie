@@ -52,15 +52,7 @@ func getHashFilename(ctx context.Context, slug string, rule ResizeRule) string {
 	hash := md5.New()
 	_, err := io.WriteString(hash, name)
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "failed to hash filename",
-			Data: map[string]interface{}{
-				"slug": slug,
-				"rule": rule,
-			},
-		})
+		logger.Error(ctx, "failed to hash filename", err, "slug", slug, "rule", rule)
 	}
 	if rule.Format == "" {
 		rule.Format = "jpeg"
@@ -93,17 +85,14 @@ func resize(ctx context.Context, src []byte, rule ResizeRule) ([]byte, error) {
 	ctx = context.WithValue(ctx, consts.ResizeProcessingTimeKey, resizeProcessingTime)
 
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-		})
+		logger.Error(ctx, "unable to process image with bimg", err)
 		return nil, err
 	}
 
-	logger.Info(logger.Record{
-		Message: fmt.Sprintf("resize image success, format: %s, quality: %d, width: %d, height: %d", rule.Format, rule.Quality, rule.Width, rule.Height),
-		Context: ctx,
-	})
+	logger.Info(ctx, fmt.Sprintf(
+		"resize image success, format: %s, quality: %d, width: %d, height: %d",
+		rule.Format, rule.Quality, rule.Width, rule.Height),
+	)
 
 	return result, err
 
@@ -120,10 +109,7 @@ func getMetadata(src []byte) Metadata {
 
 	result, err := bimg.NewImage(src).Size()
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Message: "failed to get metadata",
-		})
+		logger.Error(context.TODO(), "failed to get metadata", err)
 		return metadata
 	}
 
@@ -136,27 +122,13 @@ func getMetadata(src []byte) Metadata {
 func openMultipart(ctx context.Context, file *multipart.FileHeader) (*bytes.Buffer, error) {
 	fl, err := file.Open()
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "failed to open image",
-			Data: map[string]interface{}{
-				"file": file,
-			},
-		})
+		logger.Error(ctx, "failed to open image", err, "file", file)
 		return nil, err
 	}
 
 	flRead, err := io.ReadAll(fl)
 	if err != nil {
-		logger.Error(logger.Record{
-			Error:   err,
-			Context: ctx,
-			Message: "failed to read image",
-			Data: map[string]interface{}{
-				"file": file,
-			},
-		})
+		logger.Error(ctx, "failed to read image", err, "file", file)
 		return nil, err
 	}
 

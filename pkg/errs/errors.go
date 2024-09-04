@@ -33,7 +33,7 @@ var (
 	ErrWrongHeightValue         = errors.New("wrong height value")
 	ErrWrongWidthValue          = errors.New("wrong width value")
 	ErrOutputFormatNotSupported = errors.New("output format not supported")
-
+	ErrUnableToUploadImage      = errors.New("unable to upload image")
 	// handler
 
 	ErrNoMultipartFormData = errors.New("file in multipart form data not provided")

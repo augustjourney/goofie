@@ -16,11 +16,7 @@ func main() {
 	ctx := context.Background()
 	cfg, err := config.LoadConfig(".")
 	if err != nil {
-		logger.Error(logger.Record{
-			Message: "load config failed",
-			Error:   err,
-			Context: ctx,
-		})
+		logger.Error(ctx, "load config failed", err)
 		return
 	}
 
@@ -33,28 +29,17 @@ func main() {
 	// do migrations
 	err = db.AutoMigrate(&users.User{}, &images.Image{}, &bookmarks.Bookmark{})
 	if err != nil {
-		logger.Error(logger.Record{
-			Message: "migration failed",
-			Error:   err,
-			Context: ctx,
-		})
+		logger.Error(ctx, "migration failed", err)
 	}
 
 	// set up app for listening
 	a := app.NewApp(db)
 
-	logger.Info(logger.Record{
-		Message: "starting server at port 8080",
-		Context: ctx,
-	})
+	logger.Info(ctx, "starting server on port 8080")
 
 	err = a.Listen(":8080")
 	if err != nil {
-		logger.Error(logger.Record{
-			Message: "start server failed",
-			Error:   err,
-			Context: ctx,
-		})
+		logger.Error(ctx, "start server failed", err)
 		return
 	}
 }

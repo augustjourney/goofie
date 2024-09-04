@@ -25,12 +25,7 @@ func (r *Repo) GetOneByEmail(ctx context.Context, email string) (User, error) {
 		return user, errs.ErrUserNotFound
 	}
 
-	logger.Error(logger.Record{
-		Context: ctx,
-		Message: "[Repo.GetOneByEmail]: unable to get a user by email",
-		Error:   err,
-		Data:    map[string]interface{}{"email": email},
-	})
+	logger.Error(ctx, "unable to get a user by email", err, "email", email)
 
 	return user, errs.ErrInternal
 }
@@ -39,12 +34,7 @@ func (r *Repo) GetOneByEmail(ctx context.Context, email string) (User, error) {
 func (r *Repo) Create(ctx context.Context, user User) (User, error) {
 	err := r.db.WithContext(ctx).Create(&user).Error
 	if err != nil {
-		logger.Error(logger.Record{
-			Context: ctx,
-			Message: "[Repo.Create]: unable to create a new user",
-			Error:   err,
-			Data:    map[string]interface{}{"user": user},
-		})
+		logger.Error(ctx, "unable to create a new user", err, "user", user)
 		return user, errs.ErrInternal
 	}
 	return user, nil

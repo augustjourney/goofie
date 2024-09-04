@@ -13,13 +13,6 @@ func GetExtension(ctx context.Context, fileName string) string {
 		return ext
 	}
 
-	logger.Error(logger.Record{
-		Message: "file does not contain extension",
-		Data: map[string]interface{}{
-			"fileName": fileName,
-			"ext":      ext,
-		},
-		Context: ctx,
-	})
+	logger.Error(ctx, "file does not contain extension", nil, "fileName", fileName, "ext", ext)
 	return ""
 }

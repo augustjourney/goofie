@@ -5,6 +5,7 @@ import (
 	"api/pkg/tracer"
 	"context"
 	"errors"
+	"log/slog"
 )
 
 // Record stores log data that will be sent to graylog and written to std.out
@@ -60,4 +61,15 @@ func (rec *Record) addValuesFromContext() {
 	if uploadProcessingTime != nil {
 		rec.Data[consts.UploadProcessingTimeKey] = uploadProcessingTime
 	}
+}
+
+func (rec *Record) Log() {
+	level := slog.LevelDebug
+	for k, v := range LogLevels {
+		if v == rec.Type {
+			level = k
+			break
+		}
+	}
+	log(*rec, level)
 }
