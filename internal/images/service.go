@@ -31,11 +31,15 @@ func (s *Service) Create(ctx context.Context, file *multipart.FileHeader, author
 	img.FromFileHeader(ctx, file).WithAuthor(authorID).WithDefaults(s.config).WithMetadata(getMetadata(src))
 
 	// upload original image
-	_, err = s.s3.Upload(ctx, bytes.NewReader(src), img.Bucket, img.GetFilename(), img.Mime, "")
+	_, err = s.s3.Upload(ctx, bytes.NewReader(src), img.Bucket, img.GetFilename(), img.Mime, nil)
 	if err != nil {
 		logger.Error(logger.Record{
 			Error:   err,
 			Context: ctx,
+			Message: "failed to upload original image",
+			Data: map[string]interface{}{
+				"image": img,
+			},
 		})
 		return result, err
 	}
