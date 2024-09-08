@@ -23,24 +23,13 @@ func (h *Handler) Signup(c *fiber.Ctx) error {
 		return resp.WithStatus(fiber.StatusBadRequest).WithError(err).Do(c)
 	}
 
-	err = body.Validate()
-	if err != nil {
-		return resp.WithStatus(fiber.StatusBadRequest).WithError(err).Do(c)
-	}
-
 	// do signup
 	result, err := h.service.Signup(ctx, body)
 	if err != nil {
-		return resp.WithError(err).Do(c)
+		return resp.WithData(result).WithError(err).Do(c)
 	}
 
-	resp.Result = result
-
-	if result.AlreadyExists {
-		return resp.WithStatus(fiber.StatusConflict).WithMessage("You already have an account").Do(c)
-	}
-
-	return resp.WithMessage("Your account has been created successfully").Do(c)
+	return resp.WithData(result).WithMessage("Your account has been created successfully").Do(c)
 }
 
 // Login handles http-request for user login

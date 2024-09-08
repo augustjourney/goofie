@@ -50,6 +50,11 @@ func (s *Service) Login(ctx context.Context, payload LoginDTO) (LoginResult, err
 func (s *Service) Signup(ctx context.Context, payload SignupDTO) (SignupResult, error) {
 	var result SignupResult
 
+	err := payload.Validate()
+	if err != nil {
+		return result, err
+	}
+
 	user := users.User{
 		Email:     payload.Email,
 		Password:  payload.Password,
@@ -71,6 +76,10 @@ func (s *Service) Signup(ctx context.Context, payload SignupDTO) (SignupResult, 
 	}
 
 	result.AlreadyExists = alreadyExists
+
+	if result.AlreadyExists {
+		return result, errs.ErrUserAlreadyExists
+	}
 
 	return result, nil
 }

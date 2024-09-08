@@ -12,7 +12,7 @@ var (
 
 	// users
 
-	ErrUserAlreadyExists = errors.New("user already exists")
+	ErrUserAlreadyExists = errors.New("you already have an account")
 	ErrUserNotFound      = errors.New("user not found")
 
 	// auth
