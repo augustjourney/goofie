@@ -11,41 +11,41 @@ import (
 	"time"
 )
 
-func parseResponseBody(c *fiber.Ctx) interface{} {
+func parseResponseBody(c *fiber.Ctx) (interface{}, error) {
 	contentLength, _ := strconv.Atoi(c.Get("Content-Length"))
 
 	if contentLength > 10000 {
-		return "too big response body"
+		return "too big response body", nil
 	}
 
 	contentType := c.Get(fiber.HeaderContentType)
 
 	if contentType == fiber.MIMETextPlain {
-		return string(c.Response().Body())
+		return string(c.Response().Body()), nil
 	}
 
 	if contentType != fiber.MIMEApplicationJSON {
-		return fmt.Sprintf("unknown content type %s to process response body", contentType)
+		return fmt.Sprintf("unknown content type %s to process response body", contentType), nil
 	}
 
 	var responseBody interface{}
 
 	err := json.Unmarshal(c.Response().Body(), &responseBody)
 	if err != nil {
-		return "unable to process response body"
+		return responseBody, err
 	}
 
-	return responseBody
+	return responseBody, nil
 }
 
-func parseRequestBody(c *fiber.Ctx) interface{} {
+func parseRequestBody(c *fiber.Ctx) (interface{}, error) {
 	if c.Method() != http.MethodPost || c.Method() != http.MethodPut {
-		return nil
+		return nil, nil
 	}
 
 	var requestBody interface{}
-	_ = c.BodyParser(&requestBody)
-	return requestBody
+	err := c.BodyParser(&requestBody)
+	return requestBody, err
 }
 
 // RequestLogger logs incoming requests
@@ -66,15 +66,25 @@ func RequestLogger(c *fiber.Ctx) error {
 		"path":            c.Path(),
 	}
 
-	// get request payload
-	// get request and response body
-	data["request_body"] = parseRequestBody(c)
-	data["response_body"] = parseResponseBody(c)
-
 	ctx, ok := c.Locals("ctx").(context.Context)
 	if !ok {
 		ctx = context.Background()
 	}
+
+	// get request payload
+	// get request and response body
+	responseBody, err := parseResponseBody(c)
+	if err != nil {
+		logger.Error(ctx, "unable to parse response body", err)
+	}
+
+	requestBody, err := parseRequestBody(c)
+	if err != nil {
+		logger.Error(ctx, "unable to parse request body", err)
+	}
+
+	data["request_body"] = requestBody
+	data["response_body"] = responseBody
 
 	// log request data
 	logData := logger.Record{
