@@ -15,6 +15,13 @@ func InitPostgres(ctx context.Context, dsn string) (*gorm.DB, error) {
 		logger.Error(ctx, "init postgres failed", err)
 		return nil, err
 	}
+
+	err = pg.Ping()
+	if err != nil {
+		logger.Error(ctx, "init postgres failed", err)
+		return nil, err
+	}
+
 	gormPostgresConn := postgres.New(postgres.Config{
 		Conn: pg,
 	})
